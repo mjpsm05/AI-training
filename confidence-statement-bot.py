@@ -43,8 +43,13 @@ if user_input:
     # Display the result
     st.write(f"**Bot's Response**: The statement indicates the user has **{label}** ")
     
+        # Initialize history if it doesn't exist
+    if 'history' not in st.session_state:
+        st.session_state.history = []
     
-    # Display the chat history
+    # Now you can safely loop through st.session_state.history
     for message in st.session_state.history:
+        # Your code to process each message
         st.write(message)
+  
 
