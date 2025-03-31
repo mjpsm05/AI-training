@@ -26,7 +26,8 @@ def generate_email_response(prompt, max_length=150):
     return response_text
 
 # Streamlit app interface
-st.title("Email Generation Chatbot")
+st.title("Email Outline Generator")
+st.write("Ask the generator to write a formal email for the best response")
 
 # User input (free-form text)
 user_query = st.text_area("Enter your query:")
