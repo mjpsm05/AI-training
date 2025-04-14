@@ -26,7 +26,7 @@ st.title("Check-In Classifier")
 st.write("Enter your check-in so I can see if it's **Good**, **Mediocre**, or **Bad**.")
 
 # User input
-user_input = st.text_area("💬 Your Check-In Message:", height=50)
+user_input = st.text_area("💬 Your Check-In Message:")
 
 if st.button("🔍 Analyze"):
     if user_input.strip() == "":
