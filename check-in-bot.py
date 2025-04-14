@@ -10,20 +10,23 @@ LABEL_MAP = {
     "LABEL_2": "Good"
 }
 
-# Load model and tokenizer
+# Load model and tokenizer (force CPU usage)
 @st.cache_resource
 def load_model():
+    # Check for CUDA (GPU) availability
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     tokenizer = AutoTokenizer.from_pretrained("mjpsm/check-ins-classifier")
     model = AutoModelForSequenceClassification.from_pretrained("mjpsm/check-ins-classifier")
-    return tokenizer, model
+    model.to(device)  # Move model to the available device
+    return tokenizer, model, device
 
-tokenizer, model = load_model()
+tokenizer, model, device = load_model()
 
-st.title("Check-In Classifier")
+st.title("🧠 Mental Health Check-In Classifier")
 st.write("Enter your check-in so I can see if it's **Good**, **Mediocre**, or **Bad**.")
 
 # User input
-user_input = st.text_area("💬 Your Check-In Message:", height=50)
+user_input = st.text_area("💬 Your Check-In Message:", height=150)
 
 if st.button("🔍 Analyze"):
     if user_input.strip() == "":
@@ -31,6 +34,9 @@ if st.button("🔍 Analyze"):
     else:
         # Tokenize input
         inputs = tokenizer(user_input, return_tensors="pt", truncation=True, padding=True)
+
+        # Move input tensors to the same device as the model
+        inputs = {key: value.to(device) for key, value in inputs.items()}
 
         # Run inference
         with torch.no_grad():
@@ -53,5 +59,6 @@ if st.button("🔍 Analyze"):
             label_key = model.config.id2label.get(idx, f"LABEL_{idx}")
             label_name = LABEL_MAP.get(label_key, label_key)
             st.write(f"{label_name}: {prob:.2%}")
+
 
 
