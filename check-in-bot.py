@@ -22,11 +22,11 @@ def load_model():
 
 tokenizer, model, device = load_model()
 
-st.title("🧠 Mental Health Check-In Classifier")
+st.title("Check-In Classifier")
 st.write("Enter your check-in so I can see if it's **Good**, **Mediocre**, or **Bad**.")
 
 # User input
-user_input = st.text_area("💬 Your Check-In Message:", height=150)
+user_input = st.text_area("💬 Your Check-In Message:", height=50)
 
 if st.button("🔍 Analyze"):
     if user_input.strip() == "":
