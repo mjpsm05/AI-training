@@ -1,30 +1,57 @@
 import streamlit as st
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+import torch.nn.functional as F
 
-# Define the label mapping
-id2label = {"LABEL_0": "Bad", "LABEL_1": "Mediocre", "LABEL_2": "Good"}
+# Map model labels to human-readable labels
+LABEL_MAP = {
+    "LABEL_0": "Bad",
+    "LABEL_1": "Mediocre",
+    "LABEL_2": "Good"
+}
 
-# Load the pipeline with the correct model
-pipe = pipeline("text-classification", model="mjpsm/check-ins-classifier")
+# Load model and tokenizer
+@st.cache_resource
+def load_model():
+    tokenizer = AutoTokenizer.from_pretrained("mjpsm/check-ins-classifier")
+    model = AutoModelForSequenceClassification.from_pretrained("mjpsm/check-ins-classifier")
+    return tokenizer, model
 
-# Streamlit UI
-st.title("Check-in Sentiment Classifier 🤖")
-st.write("Enter a check-in message below and get its classification!")
+tokenizer, model = load_model()
+
+st.title("Check-In Classifier")
+st.write("Enter your check-in so I can see if it's **Good**, **Mediocre**, or **Bad**.")
 
 # User input
-user_input = st.text_area("Enter your check-in text:", "")
+user_input = st.text_area("💬 Your Check-In Message:", height=50)
 
-if st.button("Classify"):
-    if user_input.strip():  # Check if input is not empty
-        result = pipe(user_input)
-
-        # Convert model output to human-readable labels
-        for r in result:
-            r["label"] = id2label[r["label"]]
-
-        # Display the result
-        st.write(f"**Predicted Rating:** {result[0]['label']} 🎯")
-        st.write(f"**Confidence Score:** {round(result[0]['score'] * 100, 2)}%")
+if st.button("🔍 Analyze"):
+    if user_input.strip() == "":
+        st.warning("Please enter some text first!")
     else:
-        st.warning("Please enter some text before classifying!")
+        # Tokenize input
+        inputs = tokenizer(user_input, return_tensors="pt", truncation=True, padding=True)
+
+        # Run inference
+        with torch.no_grad():
+            outputs = model(**inputs)
+
+        logits = outputs.logits
+        probs = F.softmax(logits, dim=1)
+
+        # Get prediction
+        predicted_class = torch.argmax(probs, dim=1).item()
+        label_key = model.config.id2label[predicted_class]
+        human_label = LABEL_MAP.get(label_key, label_key)
+        confidence = torch.max(probs).item()
+
+        st.success(f"🧾 Prediction: **{human_label}** (Confidence: {confidence:.2%})")
+
+        # Show all class probabilities with human-readable labels
+        st.subheader("📊 Class Probabilities:")
+        for idx, prob in enumerate(probs[0]):
+            label_key = model.config.id2label.get(idx, f"LABEL_{idx}")
+            label_name = LABEL_MAP.get(label_key, label_key)
+            st.write(f"{label_name}: {prob:.2%}")
+
 
