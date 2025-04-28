@@ -27,7 +27,7 @@ uploaded_file = st.camera_input("Take a picture")  # Opens your webcam
 if uploaded_file is not None:
     # Load the image
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+    st.image(image, caption="Uploaded Image", use_container_width=True)
     
     # Preprocess
     inputs = processor(images=image, return_tensors="pt")
